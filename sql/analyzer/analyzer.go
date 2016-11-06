@@ -12,7 +12,7 @@ const maxAnalysisIterations = 1000
 type Analyzer struct {
 	Rules           []Rule
 	ValidationRules []ValidationRule
-	Catalog         *sql.Catalog
+	Catalog         sql.DBStorer
 	CurrentDatabase string
 }
 
@@ -26,7 +26,7 @@ type ValidationRule struct {
 	Apply func(*Analyzer, sql.Node) error
 }
 
-func New(catalog *sql.Catalog) *Analyzer {
+func New(catalog sql.DBStorer) *Analyzer {
 	return &Analyzer{
 		Rules:           DefaultRules,
 		ValidationRules: DefaultValidationRules,

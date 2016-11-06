@@ -1,21 +1,25 @@
 package sql
 
-import (
-	"fmt"
-)
+import "fmt"
 
 // Catalog holds databases, tables and functions.
-type Catalog struct {
+type catalog struct {
 	Databases
 	FunctionRegistry
 }
 
+type DBStorer interface {
+	Registrator
+	Database(name string) (Database, error)
+	AddDatabase(db Database) error
+	Table(dbName string, tableName string) (Table, error)
+}
+
 // NewCatalog returns a new empty Catalog.
-func NewCatalog() *Catalog {
-	return &Catalog{
+func NewCatalog() DBStorer {
+	return &catalog{
 		Databases:        Databases{},
-		FunctionRegistry: NewFunctionRegistry(),
-	}
+		FunctionRegistry: NewFunctionRegistry()}
 }
 
 // Databases is a collection of Database.

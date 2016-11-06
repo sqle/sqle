@@ -22,7 +22,7 @@ func TestAnalyzer_Analyze(t *testing.T) {
 	db.AddTable("mytable", table)
 	db.AddTable("mytable2", table2)
 
-	catalog := &sql.Catalog{}
+	catalog := sql.NewCatalog()
 	catalog.AddDatabase(db)
 	a := analyzer.New(catalog)
 	a.CurrentDatabase = "mydb"
@@ -189,7 +189,7 @@ func TestAnalyzer_Analyze(t *testing.T) {
 func TestAnalyzer_Analyze_MaxIterations(t *testing.T) {
 	assert := require.New(t)
 
-	catalog := &sql.Catalog{}
+	catalog := sql.NewCatalog()
 	a := analyzer.New(catalog)
 	a.CurrentDatabase = "mydb"
 

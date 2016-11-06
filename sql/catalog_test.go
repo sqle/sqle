@@ -18,7 +18,7 @@ func TestCatalog_Database(t *testing.T) {
 	assert.Nil(db)
 
 	mydb := mem.NewDatabase("foo")
-	c.Databases = append(c.Databases, mydb)
+	c.AddDatabase(mydb)
 
 	db, err = c.Database("foo")
 	assert.NoError(err)
@@ -35,7 +35,7 @@ func TestCatalog_Table(t *testing.T) {
 	assert.Nil(table)
 
 	mydb := mem.NewDatabase("foo")
-	c.Databases = append(c.Databases, mydb)
+	c.AddDatabase(mydb)
 
 	table, err = c.Table("foo", "bar")
 	assert.EqualError(err, "table not found: bar")
@@ -50,7 +50,7 @@ func TestCatalog_Table(t *testing.T) {
 }
 
 func TestAddDatabase(t *testing.T) {
-	catalog := &sql.Catalog{}
+	catalog := sql.NewCatalog()
 
 	db1 := &DatabaseMock{"db1"}
 	db2 := &DatabaseMock{"db2"}
