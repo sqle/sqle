@@ -48,3 +48,31 @@ func TestCatalog_Table(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(mytable, table)
 }
+
+func TestAddDatabase(t *testing.T) {
+	catalog := &sql.Catalog{}
+
+	db1 := &DatabaseMock{"db1"}
+	db2 := &DatabaseMock{"db2"}
+	dbDupeName := &DatabaseMock{"db1"}
+	dbEmptyName := &DatabaseMock{""}
+	dbWrongName := &DatabaseMock{"INFORMATION_SCHEMA"}
+
+	assert.NoError(t, catalog.AddDatabase(db1))
+	assert.NoError(t, catalog.AddDatabase(db2))
+	assert.Error(t, catalog.AddDatabase(dbDupeName))
+	assert.Error(t, catalog.AddDatabase(dbEmptyName))
+	assert.Error(t, catalog.AddDatabase(dbWrongName))
+}
+
+type DatabaseMock struct {
+	name string
+}
+
+func (db *DatabaseMock) Tables() map[string]sql.Table {
+	return nil
+}
+
+func (db *DatabaseMock) Name() string {
+	return db.name
+}

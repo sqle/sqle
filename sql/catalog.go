@@ -47,3 +47,18 @@ func (d Databases) Table(dbName string, tableName string) (Table, error) {
 
 	return table, nil
 }
+
+// AddDatabase adds a the passed database to the catalog and returns an error
+// if it could not be done because its name is incorrect or it already exists
+func (c *Databases) AddDatabase(db Database) error {
+	if db.Name() == "" || db.Name() == "INFORMATION_SCHEMA" {
+		return fmt.Errorf("database name is not correct")
+	}
+
+	if _, err := c.Database(db.Name()); err == nil {
+		return fmt.Errorf("database %s already existent in Catalog", db.Name())
+	}
+
+	*c = append(*c, db)
+	return nil
+}

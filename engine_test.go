@@ -129,7 +129,7 @@ func newEngine(t *testing.T) *sqle.Engine {
 	db.AddTable("mytable", table)
 
 	e := sqle.New()
-	e.AddDatabase(db)
+	assert.Nil(e.AddDatabase(db))
 
 	return e
 }
