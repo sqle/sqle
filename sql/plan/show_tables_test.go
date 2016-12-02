@@ -18,9 +18,9 @@ func TestShowTables(t *testing.T) {
 	assert.Nil(unresolvedShowTables.Children())
 
 	db := mem.NewDatabase("test")
-	db.AddTable("test1", mem.NewTable("test1", nil))
-	db.AddTable("test2", mem.NewTable("test2", nil))
-	db.AddTable("test3", mem.NewTable("test3", nil))
+	db.AddTable(mem.NewTable("test1", nil))
+	db.AddTable(mem.NewTable("test2", nil))
+	db.AddTable(mem.NewTable("test3", nil))
 
 	resolvedShowTables := NewShowTables(db)
 	assert.True(resolvedShowTables.Resolved())

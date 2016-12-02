@@ -20,7 +20,7 @@ func TestDatabase_AddTable(t *testing.T) {
 	tables := db.Tables()
 	assert.Equal(0, len(tables))
 	table := &Table{"test_table", sql.Schema{}, nil}
-	db.AddTable("test_table", table)
+	db.AddTable(table)
 	tables = db.Tables()
 	assert.Equal(1, len(tables))
 	tt, ok := tables["test_table"]

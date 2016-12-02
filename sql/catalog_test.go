@@ -42,7 +42,7 @@ func TestCatalog_Table(t *testing.T) {
 	assert.Nil(table)
 
 	mytable := mem.NewTable("bar", sql.Schema{})
-	mydb.AddTable("bar", mytable)
+	mydb.AddTable(mytable)
 
 	table, err = c.Table("foo", "bar")
 	assert.NoError(err)
@@ -56,13 +56,11 @@ func TestAddDatabase(t *testing.T) {
 	db2 := &DatabaseMock{"db2"}
 	dbDupeName := &DatabaseMock{"db1"}
 	dbEmptyName := &DatabaseMock{""}
-	dbWrongName := &DatabaseMock{"INFORMATION_SCHEMA"}
 
 	assert.NoError(t, catalog.AddDatabase(db1))
 	assert.NoError(t, catalog.AddDatabase(db2))
 	assert.Error(t, catalog.AddDatabase(dbDupeName))
 	assert.Error(t, catalog.AddDatabase(dbEmptyName))
-	assert.Error(t, catalog.AddDatabase(dbWrongName))
 }
 
 type DatabaseMock struct {

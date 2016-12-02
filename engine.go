@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"gopkg.in/sqle/sqle.v0/metadata"
 	"gopkg.in/sqle/sqle.v0/sql"
 	"gopkg.in/sqle/sqle.v0/sql/analyzer"
 	"gopkg.in/sqle/sqle.v0/sql/expression"
@@ -58,6 +59,12 @@ func New() *Engine {
 	}
 
 	a := analyzer.New(c)
+
+	m := metadata.NewDB(c)
+	if err := c.AddDatabase(m); err != nil {
+		panic(fmt.Sprintf("could not create catalog metadata database\n%s", err.Error()))
+	}
+
 	return &Engine{c, a}
 }
 
@@ -76,7 +83,15 @@ func (e *Engine) AddDatabase(db sql.Database) error {
 		return err
 	}
 
-	e.Analyzer.CurrentDatabase = db.Name()
+	return e.CurrentDatabase(db.Name())
+}
+
+func (e *Engine) CurrentDatabase(name string) error {
+	if _, err := e.Catalog.Database(name); err != nil {
+		return err
+	}
+
+	e.Analyzer.CurrentDatabase = name
 	return nil
 }
 

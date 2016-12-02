@@ -16,6 +16,10 @@ func (r Row) Copy() Row {
 	return NewRow(r...)
 }
 
+func (r Row) Columns() []interface{} {
+	return r
+}
+
 type RowIter interface {
 	Next() (Row, error)
 	Close() error

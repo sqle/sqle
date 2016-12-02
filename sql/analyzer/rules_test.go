@@ -19,7 +19,7 @@ func Test_resolveTables(t *testing.T) {
 
 	table := mem.NewTable("mytable", sql.Schema{{Name: "i", Type: sql.Integer}})
 	db := mem.NewDatabase("mydb")
-	db.AddTable("mytable", table)
+	db.AddTable(table)
 
 	catalog := sql.NewCatalog()
 	catalog.AddDatabase(db)
@@ -48,7 +48,7 @@ func Test_resolveTables_Nested(t *testing.T) {
 
 	table := mem.NewTable("mytable", sql.Schema{{Name: "i", Type: sql.Integer}})
 	db := mem.NewDatabase("mydb")
-	db.AddTable("mytable", table)
+	db.AddTable(table)
 
 	catalog := sql.NewCatalog()
 	catalog.AddDatabase(db)

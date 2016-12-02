@@ -57,7 +57,7 @@ func createTestDatabase() *mem.Database {
 		{Name: "name", Type: sql.String},
 		{Name: "email", Type: sql.String},
 	})
-	db.AddTable("mytable", table)
+	db.AddTable(table)
 	table.Insert(sql.NewRow("John Doe", "john@doe.com"))
 	table.Insert(sql.NewRow("John Doe", "johnalt@doe.com"))
 	table.Insert(sql.NewRow("Jane Doe", "jane@doe.com"))

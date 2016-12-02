@@ -3,13 +3,14 @@ package mem
 import (
 	"fmt"
 
+	"gopkg.in/sqle/sqle.v0/memory"
 	"gopkg.in/sqle/sqle.v0/sql"
 )
 
 type Table struct {
 	name   string
 	schema sql.Schema
-	data   []sql.Row
+	data   [][]interface{}
 }
 
 func NewTable(name string, schema sql.Schema) *Table {
@@ -36,7 +37,9 @@ func (t *Table) Children() []sql.Node {
 }
 
 func (t *Table) RowIter() (sql.RowIter, error) {
-	return sql.RowsToRowIter(t.data...), nil
+	//TODO: should work
+	//return sql.RowsToRowIter(t.data...), nil
+	return memory.NewIter(&container{data: t.data}), nil
 }
 
 func (t *Table) TransformUp(f func(sql.Node) sql.Node) sql.Node {
@@ -59,6 +62,45 @@ func (t *Table) Insert(row sql.Row) error {
 		}
 	}
 
-	t.data = append(t.data, row.Copy())
+	crow := make([]interface{}, len(row))
+	for i, col := range row {
+		crow[i] = col
+	}
+	t.data = append(t.data, crow)
 	return nil
+}
+
+/*
+TODO: deleteme
+type iter struct {
+	idx  int
+	rows []sql.Row
+}
+
+func (i *iter) Next() (sql.Row, error) {
+	if i.idx >= len(i.rows) {
+		return nil, io.EOF
+	}
+
+	row := i.rows[i.idx]
+	i.idx++
+	return row.Copy(), nil
+}
+
+func (i *iter) Close() error {
+	i.rows = nil
+	return nil
+}interface{}
+*/
+
+type container struct {
+	data [][]interface{}
+}
+
+func (i *container) Get(idx int) []interface{} {
+	return i.data[idx]
+}
+
+func (i *container) Length() int {
+	return len(i.data)
 }
