@@ -1,12 +1,12 @@
 package sqle_test
 
 import (
-	"database/sql"
+	dbsql "database/sql"
 	"fmt"
 
 	"gopkg.in/sqle/sqle.v0"
 	"gopkg.in/sqle/sqle.v0/mem"
-	gitqlsql "gopkg.in/sqle/sqle.v0/sql"
+	"gopkg.in/sqle/sqle.v0/sql"
 )
 
 func Example() {
@@ -14,7 +14,7 @@ func Example() {
 	sqle.DefaultEngine.AddDatabase(createTestDatabase())
 
 	// Open a sql connection with the default engine.
-	conn, err := sql.Open(sqle.DriverName, "")
+	conn, err := dbsql.Open(sqle.DriverName, "")
 	checkIfError(err)
 
 	// Prepare a query.
@@ -53,14 +53,14 @@ func checkIfError(err error) {
 
 func createTestDatabase() *mem.Database {
 	db := mem.NewDatabase("test")
-	table := mem.NewTable("mytable", gitqlsql.Schema{
-		{Name: "name", Type: gitqlsql.String},
-		{Name: "email", Type: gitqlsql.String},
+	table := mem.NewTable("mytable", sql.Schema{
+		{Name: "name", Type: sql.String},
+		{Name: "email", Type: sql.String},
 	})
 	db.AddTable("mytable", table)
-	table.Insert(gitqlsql.NewRow("John Doe", "john@doe.com"))
-	table.Insert(gitqlsql.NewRow("John Doe", "johnalt@doe.com"))
-	table.Insert(gitqlsql.NewRow("Jane Doe", "jane@doe.com"))
-	table.Insert(gitqlsql.NewRow("Evil Bob", "evilbob@gmail.com"))
+	table.Insert(sql.NewRow("John Doe", "john@doe.com"))
+	table.Insert(sql.NewRow("John Doe", "johnalt@doe.com"))
+	table.Insert(sql.NewRow("Jane Doe", "jane@doe.com"))
+	table.Insert(sql.NewRow("Evil Bob", "evilbob@gmail.com"))
 	return db
 }
