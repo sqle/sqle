@@ -3,20 +3,34 @@ package mem
 import (
 	"fmt"
 
-	"gopkg.in/sqle/sqle.v0/memory"
 	"gopkg.in/sqle/sqle.v0/sql"
+	"gopkg.in/sqle/sqle.v0/sql/iterator"
 )
 
 type Table struct {
-	name   string
-	schema sql.Schema
-	data   [][]interface{}
+	name            string
+	schema          sql.Schema
+	underlayingData UnderlayingTableData
+}
+
+type UnderlayingTableData interface {
+	RowIter() sql.RowIter
+	Insert(row sql.Row) error
 }
 
 func NewTable(name string, schema sql.Schema) *Table {
 	return &Table{
-		name:   name,
-		schema: schema,
+		name:            name,
+		schema:          schema,
+		underlayingData: &genericUnderlaying{},
+	}
+}
+
+func NewTableWithUnderlaying(name string, schema sql.Schema, underlayingData UnderlayingTableData) *Table {
+	return &Table{
+		name:            name,
+		schema:          schema,
+		underlayingData: underlayingData,
 	}
 }
 
@@ -39,7 +53,8 @@ func (t *Table) Children() []sql.Node {
 func (t *Table) RowIter() (sql.RowIter, error) {
 	//TODO: should work
 	//return sql.RowsToRowIter(t.data...), nil
-	return memory.NewIter(&container{data: t.data}), nil
+	//(old)return memory.NewIter(&container{data: t.data}), nil
+	return t.underlayingData.RowIter(), nil
 }
 
 func (t *Table) TransformUp(f func(sql.Node) sql.Node) sql.Node {
@@ -62,45 +77,19 @@ func (t *Table) Insert(row sql.Row) error {
 		}
 	}
 
-	crow := make([]interface{}, len(row))
-	for i, col := range row {
-		crow[i] = col
-	}
-	t.data = append(t.data, crow)
+	t.underlayingData.Insert(row)
 	return nil
 }
 
-/*
-TODO: deleteme
-type iter struct {
-	idx  int
+type genericUnderlaying struct {
 	rows []sql.Row
 }
 
-func (i *iter) Next() (sql.Row, error) {
-	if i.idx >= len(i.rows) {
-		return nil, io.EOF
-	}
-
-	row := i.rows[i.idx]
-	i.idx++
-	return row.Copy(), nil
+func (u *genericUnderlaying) RowIter() sql.RowIter {
+	return iterator.NewRowIterator(u.rows)
 }
 
-func (i *iter) Close() error {
-	i.rows = nil
+func (u *genericUnderlaying) Insert(row sql.Row) error {
+	u.rows = append(u.rows, row.Copy())
 	return nil
-}interface{}
-*/
-
-type container struct {
-	data [][]interface{}
-}
-
-func (i *container) Get(idx int) []interface{} {
-	return i.data[idx]
-}
-
-func (i *container) Length() int {
-	return len(i.data)
 }

@@ -1,8 +1,6 @@
 package sql
 
-import (
-	"errors"
-)
+import "errors"
 
 type Nameable interface {
 	Name() string
@@ -71,3 +69,14 @@ type Database interface {
 }
 
 var ErrInvalidType = errors.New("invalid type")
+
+func TableSlice(tables map[string]Table) []Table {
+	t := make([]Table, len(tables))
+	i := 0
+	for _, table := range tables {
+		t[i] = table
+		i++
+	}
+
+	return t
+}

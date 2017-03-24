@@ -8,8 +8,8 @@ type catalog struct {
 	FunctionRegistry
 }
 
-//DBStorer modelates the interface of the catalog
-type DBStorer interface {
+//Catalog modelates the interface of the catalog
+type Catalog interface {
 	Registrator
 	Database(name string) (Database, error)
 	Dbs() Databases
@@ -18,7 +18,7 @@ type DBStorer interface {
 }
 
 //NewCatalog creates a new catalog
-func NewCatalog() DBStorer {
+func NewCatalog() Catalog {
 	return &catalog{Databases{}, NewFunctionRegistry()}
 }
 

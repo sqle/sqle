@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 
-	"gopkg.in/sqle/sqle.v0/memory"
 	"gopkg.in/sqle/sqle.v0/sql"
 )
 
@@ -34,93 +33,64 @@ var metadataColumns = []metadataColumn{
 
 type columnsTable struct {
 	*metadataTable
-	index map[string]int
 }
 
-func newcolumnsTable(catalog sql.DBStorer) *columnsTable {
+func newcolumnsTable(catalog sql.Catalog) *columnsTable {
 	schema, index := schema(metadataColumns)
-	data := columnsData{data: catalog, index: index}
+	underlaying := columnsData{data: catalog, index: index}
 	return &columnsTable{
-		newTable(SchemaColumnTableName, schema, data),
-		index,
+		newTable(SchemaColumnTableName, schema, underlaying),
 	}
-}
-
-func (t *columnsTable) Insert(values ...interface{}) error {
-	return fmt.Errorf("ERROR: %s is a table view; Insertion is not allowed", t.Name())
 }
 
 type columnsData struct {
-	data  sql.DBStorer
+	data  sql.Catalog
 	index map[string]int
 }
 
-func (c columnsData) IterData() memory.IteratorData {
-	return &columnsDBIter{data: c.data.Dbs(), index: c.index}
+func (c columnsData) RowIter() sql.RowIter {
+	return &columnsIter{columnIterator: newColumnIterator(c.data), index: c.index}
 }
 
-func (c columnsData) Insert(values ...interface{}) error {
+func (c columnsData) Insert(row sql.Row) error {
 	return fmt.Errorf("ERROR: Insertion is not allowed")
 }
 
-type columnsDBIter struct {
-	data  []sql.Database
-	index map[string]int
-	cur   internalTableColumnIterator
-	idx   int
-	count *int
+type columnsIter struct {
+	columnIterator *columnIterator
+	index          map[string]int
+	closed         bool
 }
 
-func (i *columnsDBIter) Length() int {
-	if i.count == nil {
-		count := 0
-		for _, db := range i.data {
-			tables := db.Tables()
-			for _, t := range tables {
-				count += len(t.Schema())
-			}
-		}
-		i.count = &count
-	}
-	return *i.count
+func (i *columnsIter) Close() error {
+	i.closed = true
+	return nil
 }
 
-func (i *columnsDBIter) Get(idx int) []interface{} {
-	next, _ := i.Next()
-	return next
-}
-
-func (i *columnsDBIter) Next() ([]interface{}, error) {
-	if i.cur == nil {
-		i.cur = &cTblIterator{
-			data: tables(i.data[i.idx].Tables()),
-		}
+func (i *columnsIter) Next() (sql.Row, error) {
+	if i.closed {
+		return nil, io.EOF
 	}
 
-	if table, column, ord, err := i.cur.Next(); err == nil {
-		return i.row(i.data[i.idx], table, column, ord), nil
-	} else if i.idx < len(i.data) {
-		i.cur = nil
-		i.idx++
-		return i.Next()
+	if db, table, col, ord, err := i.columnIterator.next(); err == nil {
+		return i.toRow(db, table, col, ord), nil
 	}
 
+	i.closed = true
 	return nil, io.EOF
 }
 
-func (i *columnsDBIter) row(db sql.Database, table sql.Table, column *sql.Column, ord int) []interface{} {
-	row := make([]interface{}, len(metadataColumns))
-	k := 0
-	for _, f := range metadataColumns {
-		row[k] = i.getColumn(f.Name, db, table, column, ord)
-		k++
+func (i *columnsIter) toRow(db sql.Database, table sql.Table, column *sql.Column, ord int) sql.Row {
+	items := make([]interface{}, len(metadataColumns))
+	for j, f := range metadataColumns {
+		items[j] = i.getField(f.Name, db, table, column, ord)
 	}
 
-	return row
+	return sql.NewRow(items...)
 }
 
-func (i *columnsDBIter) getColumn(name string, db sql.Database, table sql.Table, column *sql.Column, ord int) interface{} {
-	switch name {
+func (i *columnsIter) getField(fieldName string, db sql.Database, table sql.Table, column *sql.Column, ord int) interface{} {
+	switch fieldName {
 	case "table_schema":
 		return db.Name()
 	case "table_name":
@@ -131,49 +101,5 @@ func (i *columnsDBIter) getColumn(name string, db sql.Database, table sql.Table,
 		return int32(ord + 1)
 	}
 
-	return metadataColumns[i.index[name]].def
-}
-
-type internalTableColumnIterator interface {
-	Next() (sql.Table, *sql.Column, int, error)
-}
-
-type cTblIterator struct {
-	data []sql.Table
-	cur  internalColumnIterator
-	idx  int
-}
-
-func (i *cTblIterator) Next() (sql.Table, *sql.Column, int, error) {
-	if i.cur == nil {
-		i.cur = &cIterator{data: i.data[i.idx].Schema()}
-	}
-
-	if column, ord, err := i.cur.Next(); err == nil {
-		return i.data[i.idx], column, ord, nil
-	} else if i.idx < len(i.data)-1 {
-		i.cur = nil
-		i.idx++
-		return i.Next()
-	}
-
-	return nil, &sql.Column{}, 0, io.EOF
-}
-
-type internalColumnIterator interface {
-	Next() (*sql.Column, int, error)
-}
-
-type cIterator struct {
-	data sql.Schema
-	idx  int
-}
-
-func (i *cIterator) Next() (*sql.Column, int, error) {
-	if i.idx >= len(i.data) {
-		return &sql.Column{}, 0, io.EOF
-	}
-
-	i.idx++
-	return i.data[i.idx-1], i.idx - 1, nil
+	return metadataColumns[i.index[fieldName]].def
 }

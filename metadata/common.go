@@ -3,7 +3,7 @@ package metadata
 import (
 	"fmt"
 
-	"gopkg.in/sqle/sqle.v0/memory"
+	"gopkg.in/sqle/sqle.v0/mem"
 	"gopkg.in/sqle/sqle.v0/sql"
 )
 
@@ -22,12 +22,12 @@ const (
 )
 
 type metadataDB struct {
-	memory.Database
-	catalog sql.DBStorer
+	mem.Database
+	catalog sql.Catalog
 }
 
-func NewDB(catalog sql.DBStorer) sql.Database {
-	embeddedDB := memory.NewDatabase(SchemaDBname)
+func NewDB(catalog sql.Catalog) sql.Database {
+	embeddedDB := mem.NewDatabase(SchemaDBname)
 	m := &metadataDB{
 		Database: *embeddedDB,
 		catalog:  catalog,
@@ -48,12 +48,12 @@ func (d metadataDB) addTable(t sql.Table) {
 }
 
 type metadataTable struct {
-	*memory.Table
+	*mem.Table
 }
 
-func newTable(name string, schema sql.Schema, data memory.TableData) *metadataTable {
+func newTable(name string, schema sql.Schema, underlayingData mem.UnderlayingTableData) *metadataTable {
 	return &metadataTable{
-		memory.NewTable(name, schema, data),
+		mem.NewTableWithUnderlaying(name, schema, underlayingData),
 	}
 }
 

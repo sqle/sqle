@@ -32,7 +32,7 @@ var defaultFunctions = map[string]interface{}{
 	"first": NewFirst,
 }
 
-func RegisterDefaults(c sql.DBStorer) error {
+func RegisterDefaults(c sql.Catalog) error {
 	for k, v := range defaultFunctions {
 		if err := c.RegisterFunction(k, v); err != nil {
 			return err

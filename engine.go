@@ -46,7 +46,7 @@ var DefaultEngine = New()
 // It implements the standard database/sql/driver/Driver interface, so it can
 // be registered as a database/sql driver.
 type Engine struct {
-	Catalog  sql.DBStorer
+	Catalog  sql.Catalog
 	Analyzer *analyzer.Analyzer
 }
 

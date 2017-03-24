@@ -2,9 +2,10 @@ package metadata
 
 import (
 	"fmt"
+	"io"
 
-	"gopkg.in/sqle/sqle.v0/memory"
 	"gopkg.in/sqle/sqle.v0/sql"
+	"gopkg.in/sqle/sqle.v0/sql/iterator"
 )
 
 var metadataSchemata = []metadataColumn{
@@ -17,60 +18,70 @@ var metadataSchemata = []metadataColumn{
 
 type schemataTable struct {
 	*metadataTable
-	index map[string]int
 }
 
-func newSchemataTable(catalog sql.DBStorer) *schemataTable {
+func newSchemataTable(catalog sql.Catalog) *schemataTable {
 	schema, index := schema(metadataSchemata)
-	data := schemataData{data: catalog, index: index}
+	underlaying := underlayingSchemataData{data: catalog, index: index}
 	return &schemataTable{
-		newTable(SchemaDBTableName, schema, data),
-		index,
+		newTable(SchemaDBTableName, schema, underlaying),
 	}
 }
 
-func (t *schemataTable) Insert(values ...interface{}) error {
-	return fmt.Errorf("ERROR: %s is a table view; Insertion is not allowed", t.Name())
-}
-
-type schemataData struct {
-	data  sql.DBStorer
+type underlayingSchemataData struct {
+	data  sql.Catalog
 	index map[string]int
 }
 
-func (c schemataData) IterData() memory.IteratorData {
-	return &schemataIter{data: c.data.Dbs(), index: c.index}
+func (c underlayingSchemataData) RowIter() sql.RowIter {
+	return &schemataIter{
+		dbIterator: iterator.NewDBIterator(c.data),
+		index:      c.index,
+	}
 }
 
-func (c schemataData) Insert(values ...interface{}) error {
+func (c underlayingSchemataData) Insert(row sql.Row) error {
 	return fmt.Errorf("ERROR: Insertion is not allowed")
 }
 
 type schemataIter struct {
-	data  []sql.Database
-	index map[string]int
+	dbIterator *iterator.DBIterator
+	index      map[string]int
+	closed     bool
 }
 
-func (i *schemataIter) Length() int {
-	return len(i.data)
+func (i *schemataIter) Close() error {
+	i.closed = true
+	return nil
 }
 
-func (i *schemataIter) Get(idx int) []interface{} {
-	row := make([]interface{}, len(metadataSchemata))
-	k := 0
-	for _, f := range metadataSchemata {
-		row[k] = i.getColumn(f.Name, i.data[idx])
-		k++
+func (i *schemataIter) Next() (sql.Row, error) {
+	if i.closed {
+		return nil, io.EOF
 	}
 
-	return row
+	if db, err := i.dbIterator.Next(); err == nil {
+		return i.toRow(db), nil
+	}
+
+	i.closed = true
+	return nil, io.EOF
 }
 
-func (i *schemataIter) getColumn(name string, value sql.Database) interface{} {
-	switch name {
+func (i *schemataIter) toRow(db sql.Database) sql.Row {
+	items := make([]interface{}, len(metadataSchemata))
+	for j, f := range metadataSchemata {
+		items[j] = i.getField(f.Name, db)
+	}
+
+	return sql.NewRow(items...)
+}
+
+func (i *schemataIter) getField(fieldName string, database sql.Database) interface{} {
+	switch fieldName {
 	case "schema_name":
-		return value.Name()
+		return database.Name()
 	default:
-		return metadataSchemata[i.index[name]].def
+		return metadataSchemata[i.index[fieldName]].def
 	}
 }

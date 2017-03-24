@@ -4,7 +4,7 @@ import (
 	"sort"
 	"testing"
 
-	"gopkg.in/sqle/sqle.v0/memory"
+	"gopkg.in/sqle/sqle.v0/mem"
 	"gopkg.in/sqle/sqle.v0/sql"
 
 	"github.com/stretchr/testify/assert"
@@ -15,15 +15,15 @@ func TestTables(t *testing.T) {
 	m := NewDB(c)
 	c.AddDatabase(m)
 
-	db1 := memory.NewDatabase("db1")
-	db2 := memory.NewDatabase("db2")
+	db1 := mem.NewDatabase("db1")
+	db2 := mem.NewDatabase("db2")
 	c.AddDatabase(db1)
 	c.AddDatabase(db2)
 
-	db1.AddTable(memory.NewTable("table11", sql.Schema{}, nil))
-	db1.AddTable(memory.NewTable("table12", sql.Schema{}, nil))
-	db2.AddTable(memory.NewTable("table21", sql.Schema{}, nil))
-	db2.AddTable(memory.NewTable("table22", sql.Schema{}, nil))
+	db1.AddTable(mem.NewTable("table11", sql.Schema{}))
+	db1.AddTable(mem.NewTable("table12", sql.Schema{}))
+	db2.AddTable(mem.NewTable("table21", sql.Schema{}))
+	db2.AddTable(mem.NewTable("table22", sql.Schema{}))
 
 	tablesTable, err := c.Table(SchemaDBname, SchemaTableTableName)
 	assert.Nil(t, err)
