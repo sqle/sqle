@@ -21,13 +21,21 @@ const (
 	SchemaColumnTableName = "COLUMNS"
 )
 
+const (
+	DefaultCharsetUtf8   = "utf8"
+	DefaultCollationUtf8 = "utf8_general_ci"
+	DefaultCatalog       = "def"
+)
+
+var DefaultNul = interface{}(nil)
+
 type metadataDB struct {
 	mem.Database
 	catalog sql.Catalog
 }
 
 func NewDB(catalog sql.Catalog) sql.Database {
-	embeddedDB := mem.NewDatabase(SchemaDBname)
+	embeddedDB := mem.NewCIDatabase(SchemaDBname)
 	m := &metadataDB{
 		Database: *embeddedDB,
 		catalog:  catalog,
@@ -39,12 +47,12 @@ func NewDB(catalog sql.Catalog) sql.Database {
 	return m
 }
 
-func (d metadataDB) AddTable(t *metadataTable) {
+func (d *metadataDB) AddTable(t sql.Table) error {
 	panic(fmt.Sprintf("The Database %s is readonly", d.Name()))
 }
 
-func (d metadataDB) addTable(t sql.Table) {
-	d.Database.AddTable(t)
+func (d *metadataDB) addTable(t sql.Table) error {
+	return d.Database.AddTable(t)
 }
 
 type metadataTable struct {
@@ -63,7 +71,7 @@ func (t *metadataTable) Insert(values ...interface{}) error {
 
 type metadataColumn struct {
 	*sql.Column
-	def interface{}
+	val interface{}
 }
 
 func schema(columns []metadataColumn) (schema sql.Schema, index map[string]int) {
@@ -77,4 +85,26 @@ func schema(columns []metadataColumn) (schema sql.Schema, index map[string]int) 
 	}
 
 	return schema, index
+}
+
+type fieldByDb func(db sql.Database) interface{}
+
+var getDbName fieldByDb = func(db sql.Database) interface{} {
+	return db.Name()
+}
+
+type fieldByTable func(table sql.Table) interface{}
+
+var getTableName fieldByTable = func(table sql.Table) interface{} {
+	return table.Name()
+}
+
+type fieldByDbAndTable func(database sql.Database, table sql.Table) interface{}
+
+type RowCounter interface {
+	RowCount() int64
+}
+
+type Enginer interface {
+	Engine() string
 }

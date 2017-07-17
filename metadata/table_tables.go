@@ -9,14 +9,14 @@ import (
 )
 
 var metadataTables = []metadataColumn{
-	{&sql.Column{Name: "table_catalog", Type: sql.String, Default: nil, Nullable: false}, "def"},
-	{&sql.Column{Name: "table_schema", Type: sql.String, Default: nil, Nullable: false}, "nil"},
-	{&sql.Column{Name: "table_name", Type: sql.String, Default: nil, Nullable: false}, "nil"},
-	{&sql.Column{Name: "table_type", Type: sql.String, Default: nil, Nullable: false}, "nil"},
-	{&sql.Column{Name: "engine", Type: sql.String, Default: nil, Nullable: false}, "nil"},
-	{&sql.Column{Name: "version", Type: sql.Integer, Default: nil, Nullable: true}, int32(0)},
+	{&sql.Column{Name: "table_catalog", Type: sql.String, Default: nil, Nullable: false}, DefaultCatalog}, //TODO: ensure that table_catalog is always 'def'
+	{&sql.Column{Name: "table_schema", Type: sql.String, Default: nil, Nullable: false}, getDbName},
+	{&sql.Column{Name: "table_name", Type: sql.String, Default: nil, Nullable: false}, getTableName},
+	{&sql.Column{Name: "table_type", Type: sql.String, Default: nil, Nullable: false}, getTableType},
+	{&sql.Column{Name: "engine", Type: sql.String, Default: nil, Nullable: false}, getEngine},
+	{&sql.Column{Name: "version", Type: sql.BigInteger, Default: nil, Nullable: true}, nil}, // NO RELEVANT. See doc
 	//{&sql.Column{"row_format", sql.String}, "nil"},
-	{&sql.Column{Name: "table_rows", Type: sql.String, Default: nil, Nullable: false}, "nil"},
+	{&sql.Column{Name: "table_rows", Type: sql.BigInteger, Default: nil, Nullable: false}, getTableRowsCount},
 	//{&sql.Column{"avg_row_length", sql.BigInteger}, int64(0)},
 	//{&sql.Column{"data_length", sql.BigInteger}, int64(0)},
 	//{&sql.Column{"max_data_length", sql.BigInteger}, int64(0)},
@@ -93,26 +93,37 @@ func (i *tablesIter) toRow(db sql.Database, table sql.Table) sql.Row {
 	return sql.NewRow(items...)
 }
 
-func (i *tablesIter) getField(fieldName string, db sql.Database, value sql.Table) interface{} {
-	switch fieldName {
-	case "table_schema":
-		return db.Name()
-	case "table_name":
-		return value.Name()
-	case "table_type":
-		if db.Name() == SchemaDBname {
-			return "View"
-		}
-		return "Base table"
-	case "table_rows":
-		if db.Name() == SchemaDBname {
-			return "View"
-		}
-	case "engine":
-		if db.Name() == SchemaDBname {
-			return "Memory"
-		}
+func (i *tablesIter) getField(fieldName string, database sql.Database, table sql.Table) interface{} {
+	fieldValue := metadataTables[i.index[fieldName]].val
+	if fieldValueFunc, ok := fieldValue.(fieldByDb); ok {
+		return fieldValueFunc(database)
+	}
+	if fieldValueFunc, ok := fieldValue.(fieldByTable); ok {
+		return fieldValueFunc(table)
 	}
 
-	return metadataTables[i.index[fieldName]].def
+	return fieldValue
+}
+
+var getTableType fieldByDb = func(database sql.Database) interface{} {
+	if database.Name() == SchemaDBname {
+		return "SYSTEM VIEW"
+	}
+	return "BASE TABLE"
+}
+
+var getTableRowsCount fieldByTable = func(table sql.Table) interface{} {
+	if rowCounter, ok := table.(RowCounter); ok {
+		return rowCounter.RowCount()
+	}
+
+	return DefaultNul
+}
+
+var getEngine fieldByDb = func(database sql.Database) interface{} {
+	if enginer, ok := database.(Enginer); ok {
+		return enginer.Engine()
+	}
+
+	return DefaultNul
 }

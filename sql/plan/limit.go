@@ -1,6 +1,7 @@
 package plan
 
 import (
+	"fmt"
 	"io"
 
 	"gopkg.in/sqle/sqle.v0/sql"
@@ -16,6 +17,10 @@ func NewLimit(size int64, child sql.Node) *Limit {
 		UnaryNode: UnaryNode{Child: child},
 		size:      size,
 	}
+}
+
+func (p *Limit) String() string {
+	return fmt.Sprintf("[Limit] %s::%d", p.Child.String(), p.size)
 }
 
 func (p *Limit) Resolved() bool {

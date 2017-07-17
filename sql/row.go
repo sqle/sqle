@@ -1,8 +1,6 @@
 package sql
 
-import (
-	"io"
-)
+import "io"
 
 type Row []interface{}
 

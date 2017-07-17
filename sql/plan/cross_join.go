@@ -3,6 +3,8 @@ package plan
 import (
 	"io"
 
+	"fmt"
+
 	"gopkg.in/sqle/sqle.v0/sql"
 )
 
@@ -17,6 +19,10 @@ func NewCrossJoin(left sql.Node, right sql.Node) *CrossJoin {
 			Right: right,
 		},
 	}
+}
+
+func (p *CrossJoin) String() string {
+	return fmt.Sprintf("[CrossJoin] %s:%s", p.Left.String(), p.Right.String())
 }
 
 func (p *CrossJoin) Schema() sql.Schema {

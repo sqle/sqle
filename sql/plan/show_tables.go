@@ -1,6 +1,7 @@
 package plan
 
 import (
+	"fmt"
 	"io"
 	"sort"
 
@@ -15,6 +16,10 @@ func NewShowTables(database sql.Database) *ShowTables {
 	return &ShowTables{
 		database: database,
 	}
+}
+
+func (p *ShowTables) String() string {
+	return fmt.Sprintf("[ShowTables] %s", p.database.Name())
 }
 
 func (p *ShowTables) Resolved() bool {

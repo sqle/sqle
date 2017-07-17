@@ -8,11 +8,11 @@ import (
 )
 
 var metadataColumns = []metadataColumn{
-	{&sql.Column{Name: "table_catalog", Type: sql.String, Default: "def", Nullable: false}, "def"},
+	{&sql.Column{Name: "table_catalog", Type: sql.String, Default: "def", Nullable: false}, DefaultCatalog}, //TODO: ensure that table_catalog is always 'def'
 	{&sql.Column{Name: "table_schema", Type: sql.String, Default: nil, Nullable: false}, "nil"},
 	{&sql.Column{Name: "table_name", Type: sql.String, Default: nil, Nullable: false}, "nil"},
 	{&sql.Column{Name: "column_name", Type: sql.String, Default: nil, Nullable: false}, "nil"},
-	{&sql.Column{Name: "ordinal_position", Type: sql.Integer, Default: nil, Nullable: false}, int32(2)},
+	{&sql.Column{Name: "ordinal_position", Type: sql.BigInteger, Default: nil, Nullable: false}, int64(2)},
 	{&sql.Column{Name: "column_default", Type: sql.String, Default: nil, Nullable: true}, "nil"},
 	{&sql.Column{Name: "is_nullable", Type: sql.String, Default: false, Nullable: false}, "nil"},
 	{&sql.Column{Name: "data_type", Type: sql.String, Default: nil, Nullable: false}, "nil"},
@@ -89,17 +89,17 @@ func (i *columnsIter) toRow(db sql.Database, table sql.Table, column *sql.Column
 	return sql.NewRow(items...)
 }
 
-func (i *columnsIter) getField(fieldName string, db sql.Database, table sql.Table, column *sql.Column, ord int) interface{} {
+func (i *columnsIter) getField(fieldName string, database sql.Database, table sql.Table, column *sql.Column, ord int) interface{} {
 	switch fieldName {
 	case "table_schema":
-		return db.Name()
+		return database.Name()
 	case "table_name":
 		return table.Name()
 	case "column_name":
 		return column.Name
 	case "ordinal_position":
-		return int32(ord + 1)
+		return int64(ord + 1)
 	}
 
-	return metadataColumns[i.index[fieldName]].def
+	return metadataColumns[i.index[fieldName]].val
 }

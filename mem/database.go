@@ -1,10 +1,16 @@
 package mem
 
-import "gopkg.in/sqle/sqle.v0/sql"
+import (
+	"fmt"
+	"strings"
+
+	"gopkg.in/sqle/sqle.v0/sql"
+)
 
 type Database struct {
-	name   string
-	tables map[string]sql.Table
+	name             string
+	tables           map[string]sql.Table
+	caseInsitiveness bool
 }
 
 func NewDatabase(name string) *Database {
@@ -14,14 +20,48 @@ func NewDatabase(name string) *Database {
 	}
 }
 
+func NewCIDatabase(name string) *Database {
+	db := NewDatabase(name)
+	db.caseInsitiveness = true
+	return db
+}
+
 func (d *Database) Name() string {
 	return d.name
+}
+
+func (d *Database) Engine() string {
+	return "MEMORY"
+}
+
+func (d *Database) Table(tableName string) (sql.Table, error) {
+	if d.caseInsitiveness {
+		tableName = strings.ToLower(tableName)
+	}
+
+	if table, ok := d.tables[tableName]; ok {
+		return table, nil
+	}
+
+	return nil, fmt.Errorf("table not found: %s", tableName)
 }
 
 func (d *Database) Tables() map[string]sql.Table {
 	return d.tables
 }
 
-func (d *Database) AddTable(t sql.Table) {
-	d.tables[t.Name()] = t
+func (d *Database) AddTable(t sql.Table) error {
+	var tableName string
+	if d.caseInsitiveness {
+		tableName = strings.ToLower(t.Name())
+	} else {
+		tableName = t.Name()
+	}
+
+	if _, ok := d.tables[tableName]; ok {
+		return fmt.Errorf("table already exists: %s", t.Name())
+	}
+
+	d.tables[tableName] = t
+	return nil
 }

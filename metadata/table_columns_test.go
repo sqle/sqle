@@ -23,9 +23,9 @@ func TestColumns(t *testing.T) {
 	sq21 := sql.Schema{&sql.Column{"table21c1", nil, false, false}}
 	sq22 := sql.Schema{&sql.Column{"table22c1", nil, false, false}}
 
-	db1.AddTable(mem.NewTable("table11", sq11))
-	db2.AddTable(mem.NewTable("table21", sq21))
-	db2.AddTable(mem.NewTable("table22", sq22))
+	assert.Nil(t, db1.AddTable(mem.NewTable("table11", sq11)))
+	assert.Nil(t, db2.AddTable(mem.NewTable("table21", sq21)))
+	assert.Nil(t, db2.AddTable(mem.NewTable("table22", sq22)))
 
 	columnsTable, err := c.Table(SchemaDBname, SchemaColumnTableName)
 	assert.Nil(t, err)

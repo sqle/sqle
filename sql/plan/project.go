@@ -1,6 +1,9 @@
 package plan
 
 import (
+	"fmt"
+	"strings"
+
 	"gopkg.in/sqle/sqle.v0/sql"
 )
 
@@ -14,6 +17,18 @@ func NewProject(expressions []sql.Expression, child sql.Node) *Project {
 		UnaryNode:   UnaryNode{child},
 		Expressions: expressions,
 	}
+}
+
+func (p *Project) String() string {
+	var projections []string
+	for _, expression := range p.Expressions {
+		projections = append(projections, expression.Name())
+	}
+	return fmt.Sprintf(
+		"[Project] %s Projection(%s)",
+		p.Child.String(),
+		strings.Join(projections, ","),
+	)
 }
 
 func (p *Project) Schema() sql.Schema {

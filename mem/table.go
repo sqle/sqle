@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"gopkg.in/sqle/sqle.v0/sql"
-	"gopkg.in/sqle/sqle.v0/sql/iterator"
 )
 
 type Table struct {
@@ -34,6 +33,10 @@ func NewTableWithUnderlaying(name string, schema sql.Schema, underlayingData Und
 	}
 }
 
+func (t *Table) String() string {
+	return "[Table] " + t.Name()
+}
+
 func (Table) Resolved() bool {
 	return true
 }
@@ -51,9 +54,6 @@ func (t *Table) Children() []sql.Node {
 }
 
 func (t *Table) RowIter() (sql.RowIter, error) {
-	//TODO: should work
-	//return sql.RowsToRowIter(t.data...), nil
-	//(old)return memory.NewIter(&container{data: t.data}), nil
 	return t.underlayingData.RowIter(), nil
 }
 
@@ -86,7 +86,7 @@ type genericUnderlaying struct {
 }
 
 func (u *genericUnderlaying) RowIter() sql.RowIter {
-	return iterator.NewRowIterator(u.rows)
+	return sql.RowsToRowIter(u.rows...)
 }
 
 func (u *genericUnderlaying) Insert(row sql.Row) error {

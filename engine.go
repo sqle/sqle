@@ -76,25 +76,6 @@ func (e *Engine) Open(name string) (driver.Conn, error) {
 	return &session{Engine: e}, nil
 }
 
-// AddDatabase adds a the passed database to the catalog and returns an error
-// if it could not be done
-func (e *Engine) AddDatabase(db sql.Database) error {
-	if err := e.Catalog.AddDatabase(db); err != nil {
-		return err
-	}
-
-	return e.CurrentDatabase(db.Name())
-}
-
-func (e *Engine) CurrentDatabase(name string) error {
-	if _, err := e.Catalog.Database(name); err != nil {
-		return err
-	}
-
-	e.Analyzer.CurrentDatabase = name
-	return nil
-}
-
 // Query executes a query without attaching to any session.
 func (e *Engine) Query(query string) (sql.Schema, sql.RowIter, error) {
 	parsed, err := parse.Parse(query)
@@ -113,6 +94,25 @@ func (e *Engine) Query(query string) (sql.Schema, sql.RowIter, error) {
 	}
 
 	return analyzed.Schema(), iter, nil
+}
+
+// AddDatabase adds a the passed database to the catalog and returns an error
+// if it could not be done
+func (e *Engine) AddDatabase(db sql.Database) error {
+	if err := e.Catalog.AddDatabase(db); err != nil {
+		return err
+	}
+
+	return e.CurrentDatabase(db.Name())
+}
+
+func (e *Engine) CurrentDatabase(name string) error {
+	if _, err := e.Catalog.Database(name); err != nil {
+		return err
+	}
+
+	e.Analyzer.CurrentDatabase = name
+	return nil
 }
 
 // Session represents a SQL session.

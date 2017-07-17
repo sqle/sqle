@@ -4,19 +4,18 @@ import (
 	"io"
 
 	"gopkg.in/sqle/sqle.v0/sql"
-	"gopkg.in/sqle/sqle.v0/sql/iterator"
 )
 
 //-- tables
 type tableIterator struct {
-	dbIterator           *iterator.DBIterator
+	dbIterator           *sql.DBIterator
 	currentDB            sql.Database
-	currentTableIterator *iterator.TableIterator
+	currentTableIterator *sql.TableIterator
 }
 
 func newTableIterator(databases sql.Catalog) *tableIterator {
 	return &tableIterator{
-		dbIterator: iterator.NewDBIterator(databases),
+		dbIterator: sql.NewDBIterator(databases),
 	}
 }
 
@@ -36,7 +35,7 @@ func (i *tableIterator) next() (sql.Database, sql.Table, error) {
 func (i *tableIterator) setNextTableIterator() error {
 	if db, err := i.dbIterator.Next(); err == nil {
 		i.currentDB = db
-		i.currentTableIterator = iterator.NewTableIterator(db)
+		i.currentTableIterator = sql.NewTableIterator(db)
 		return nil
 	}
 
@@ -47,7 +46,7 @@ func (i *tableIterator) setNextTableIterator() error {
 type columnIterator struct {
 	tableIterator         *tableIterator
 	currentTable          sql.Table
-	currentColumnIterator *iterator.ColumnIterator
+	currentColumnIterator *sql.ColumnIterator
 	colIdx                int
 }
 
@@ -75,7 +74,7 @@ func (i *columnIterator) setNextColumnIterator() error {
 	if _, table, err := i.tableIterator.next(); err == nil {
 		i.currentTable = table
 		i.colIdx = 0
-		i.currentColumnIterator = iterator.NewColumnIterator(table)
+		i.currentColumnIterator = sql.NewColumnIterator(table)
 		return nil
 	}
 

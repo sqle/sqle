@@ -48,13 +48,7 @@ func (d Databases) Table(dbName string, tableName string) (Table, error) {
 		return nil, err
 	}
 
-	tables := db.Tables()
-	table, found := tables[tableName]
-	if !found {
-		return nil, fmt.Errorf("table not found: %s", tableName)
-	}
-
-	return table, nil
+	return db.Table(tableName)
 }
 
 // AddDatabase adds a the passed database to the catalog and returns an error

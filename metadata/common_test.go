@@ -5,6 +5,8 @@ import (
 
 	"gopkg.in/sqle/sqle.v0/sql"
 
+	"strings"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,8 +15,8 @@ func TestMetadataTables(t *testing.T) {
 	assert.Equal(t, SchemaDBname, metadataDB.Name())
 
 	tables := metadataDB.Tables()
-	assert.Contains(t, tables, SchemaDBTableName)
-	assert.Contains(t, tables, SchemaTableTableName)
-	assert.Contains(t, tables, SchemaColumnTableName)
+	assert.Contains(t, tables, strings.ToLower(SchemaDBTableName))
+	assert.Contains(t, tables, strings.ToLower(SchemaTableTableName))
+	assert.Contains(t, tables, strings.ToLower(SchemaColumnTableName))
 	assert.Equal(t, 3, len(tables))
 }

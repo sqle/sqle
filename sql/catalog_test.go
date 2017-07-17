@@ -42,7 +42,7 @@ func TestCatalog_Table(t *testing.T) {
 	assert.Nil(table)
 
 	mytable := mem.NewTable("bar", sql.Schema{})
-	mydb.AddTable(mytable)
+	assert.Nil(mydb.AddTable(mytable))
 
 	table, err = c.Table("foo", "bar")
 	assert.NoError(err)
@@ -73,4 +73,12 @@ func (db *DatabaseMock) Tables() map[string]sql.Table {
 
 func (db *DatabaseMock) Name() string {
 	return db.name
+}
+
+func (db *DatabaseMock) Table(tableName string) (sql.Table, error) {
+	return nil, nil
+}
+
+func (db *DatabaseMock) AddTable(table sql.Table) error {
+	return nil
 }

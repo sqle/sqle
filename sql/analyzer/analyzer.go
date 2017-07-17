@@ -49,6 +49,9 @@ func (a *Analyzer) Analyze(n sql.Node) (sql.Node, error) {
 
 	// TODO improve error handling
 	if errs := a.validate(cur); len(errs) != 0 {
+		for _, err := range errs {
+			fmt.Println(fmt.Sprintf("ERROR. - %s", err))
+		}
 		return cur, errs[0]
 	}
 

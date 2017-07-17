@@ -25,6 +25,22 @@ func NewGroupBy(aggregate []sql.Expression, grouping []sql.Expression,
 	}
 }
 
+func (p *GroupBy) String() string {
+	var aggregate []string
+	var group []string
+	for _, expression := range p.aggregate {
+		aggregate = append(aggregate, expression.Name())
+	}
+	for _, expression := range p.grouping {
+		group = append(group, expression.Name())
+	}
+	return fmt.Sprintf(
+		"[GroupBy] %s Aggregate(%s) Group(%s)",
+		p.Child.String(),
+		strings.Join(aggregate, ","),
+		strings.Join(group, ","),
+	)
+}
 func (p *GroupBy) Resolved() bool {
 	return p.UnaryNode.Child.Resolved() &&
 		expressionsResolved(p.aggregate...) &&

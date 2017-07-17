@@ -1,6 +1,9 @@
 package plan
 
 import (
+	"fmt"
+	"strings"
+
 	"gopkg.in/sqle/sqle.v0/sql"
 )
 
@@ -10,6 +13,18 @@ type Values struct {
 
 func NewValues(tuples [][]sql.Expression) *Values {
 	return &Values{tuples}
+}
+
+func (p *Values) String() string {
+	var values []string
+	for _, value := range p.ExpressionTuples {
+		var vs []string
+		for _, v := range value {
+			vs = append(vs, fmt.Sprintf("%s", v.Name()))
+		}
+		values = append(values, fmt.Sprintf("[%s]", strings.Join(vs, ",")))
+	}
+	return fmt.Sprintf("[Values] (%s)", strings.Join(values, ","))
 }
 
 func (p *Values) Schema() sql.Schema {

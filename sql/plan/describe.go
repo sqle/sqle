@@ -1,6 +1,7 @@
 package plan
 
 import (
+	"fmt"
 	"io"
 
 	"gopkg.in/sqle/sqle.v0/sql"
@@ -12,6 +13,10 @@ type Describe struct {
 
 func NewDescribe(child sql.Node) *Describe {
 	return &Describe{UnaryNode{child}}
+}
+
+func (d *Describe) String() string {
+	return fmt.Sprintf("[Describe] %s", d.Child.String())
 }
 
 func (d *Describe) Schema() sql.Schema {

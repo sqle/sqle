@@ -5,15 +5,14 @@ import (
 	"io"
 
 	"gopkg.in/sqle/sqle.v0/sql"
-	"gopkg.in/sqle/sqle.v0/sql/iterator"
 )
 
 var metadataSchemata = []metadataColumn{
-	{&sql.Column{Name: "catalog_name", Type: sql.String, Default: nil, Nullable: false}, "def"},
-	{&sql.Column{Name: "schema_name", Type: sql.String, Default: nil, Nullable: false}, "nil"},
-	{&sql.Column{Name: "default_character_set_name", Type: sql.String, Default: "utf8", Nullable: false}, "nil"},
-	{&sql.Column{Name: "default_collation_name", Type: sql.String, Default: "utf8_general_ci", Nullable: false}, "nil"},
-	{&sql.Column{Name: "sql_path", Type: sql.String, Default: nil, Nullable: true}, "nil"},
+	{&sql.Column{Name: "catalog_name", Type: sql.String, Default: nil, Nullable: false}, DefaultCatalog}, //TODO: ensure that catalog_name is always 'def'
+	{&sql.Column{Name: "schema_name", Type: sql.String, Default: nil, Nullable: false}, getDbName},
+	{&sql.Column{Name: "default_character_set_name", Type: sql.String, Default: "utf8", Nullable: false}, DefaultCharsetUtf8},          //TODO: ensure that characterSet is always 'utf-8'
+	{&sql.Column{Name: "default_collation_name", Type: sql.String, Default: "utf8_general_ci", Nullable: false}, DefaultCollationUtf8}, //TODO: ensure that collation is always 'utf-8'
+	{&sql.Column{Name: "sql_path", Type: sql.String, Default: nil, Nullable: true}, DefaultNul},                                        //TODO: ensure that sql_path is always 'null'
 }
 
 type schemataTable struct {
@@ -35,7 +34,7 @@ type underlayingSchemataData struct {
 
 func (c underlayingSchemataData) RowIter() sql.RowIter {
 	return &schemataIter{
-		dbIterator: iterator.NewDBIterator(c.data),
+		dbIterator: sql.NewDBIterator(c.data),
 		index:      c.index,
 	}
 }
@@ -45,7 +44,7 @@ func (c underlayingSchemataData) Insert(row sql.Row) error {
 }
 
 type schemataIter struct {
-	dbIterator *iterator.DBIterator
+	dbIterator *sql.DBIterator
 	index      map[string]int
 	closed     bool
 }
@@ -78,10 +77,10 @@ func (i *schemataIter) toRow(db sql.Database) sql.Row {
 }
 
 func (i *schemataIter) getField(fieldName string, database sql.Database) interface{} {
-	switch fieldName {
-	case "schema_name":
-		return database.Name()
-	default:
-		return metadataSchemata[i.index[fieldName]].def
+	fieldValue := metadataSchemata[i.index[fieldName]].val
+	if fieldValueFunc, ok := fieldValue.(fieldByDb); ok {
+		return fieldValueFunc(database)
 	}
+
+	return fieldValue
 }

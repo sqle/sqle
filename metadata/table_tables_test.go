@@ -20,10 +20,10 @@ func TestTables(t *testing.T) {
 	c.AddDatabase(db1)
 	c.AddDatabase(db2)
 
-	db1.AddTable(mem.NewTable("table11", sql.Schema{}))
-	db1.AddTable(mem.NewTable("table12", sql.Schema{}))
-	db2.AddTable(mem.NewTable("table21", sql.Schema{}))
-	db2.AddTable(mem.NewTable("table22", sql.Schema{}))
+	assert.Nil(t, db1.AddTable(mem.NewTable("table11", sql.Schema{})))
+	assert.Nil(t, db1.AddTable(mem.NewTable("table12", sql.Schema{})))
+	assert.Nil(t, db2.AddTable(mem.NewTable("table21", sql.Schema{})))
+	assert.Nil(t, db2.AddTable(mem.NewTable("table22", sql.Schema{})))
 
 	tablesTable, err := c.Table(SchemaDBname, SchemaTableTableName)
 	assert.Nil(t, err)

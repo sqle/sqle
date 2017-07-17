@@ -1,6 +1,7 @@
 package analyzer_test
 
 import (
+	"fmt"
 	"testing"
 
 	"gopkg.in/sqle/sqle.v0/sql"
@@ -18,10 +19,10 @@ func Test_resolved(t *testing.T) {
 
 	assert.Equal(vr.Name, "validate_resolved")
 
-	err := vr.Apply(nil, dummyNode{true})
+	err := vr.Apply(nil, &dummyNode{true})
 	assert.NoError(err)
 
-	err = vr.Apply(nil, dummyNode{false})
+	err = vr.Apply(nil, &dummyNode{false})
 	assert.Error(err)
 
 }
@@ -33,9 +34,9 @@ func Test_orderBy(t *testing.T) {
 
 	assert.Equal(vr.Name, "validate_order_by")
 
-	err := vr.Apply(nil, dummyNode{true})
+	err := vr.Apply(nil, &dummyNode{true})
 	assert.NoError(err)
-	err = vr.Apply(nil, dummyNode{false})
+	err = vr.Apply(nil, &dummyNode{false})
 	assert.NoError(err)
 
 	err = vr.Apply(nil, plan.NewSort(
@@ -47,6 +48,7 @@ func Test_orderBy(t *testing.T) {
 
 type dummyNode struct{ resolved bool }
 
+func (n *dummyNode) String() string                            { return fmt.Sprintf("[dummyNode]") }
 func (n dummyNode) Resolved() bool                             { return n.resolved }
 func (dummyNode) Schema() sql.Schema                           { return sql.Schema{} }
 func (dummyNode) Children() []sql.Node                         { return nil }
