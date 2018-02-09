@@ -34,7 +34,7 @@ We are continuously adding more functionality to gitql. We support a subset of t
 
 ## Powered by sqle
 
-* [gitql](https://github.com/sqle/gitql)
+* [gitquery](https://github.com/sqle/gitquery)
 
 ## License
 
