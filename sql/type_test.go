@@ -6,6 +6,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestType_Slice(t *testing.T) {
+	var stringArray = Array(String)
+
+	assert := assert.New(t)
+	assert.Equal("array[string]", stringArray.Name())
+
+	assert.True(stringArray.Check([]interface{}{"a", "b", "c"}))
+	assert.False(stringArray.Check("test"))
+	assert.False(stringArray.Check(1))
+	v, err := stringArray.Convert([]interface{}{"a", "b", "c"})
+	assert.Nil(err)
+	assert.Equal([]interface{}{"a", "b", "c"}, v)
+	v, err = stringArray.Convert("test")
+	assert.Equal(ErrInvalidType, err)
+	assert.Nil(v)
+	assert.Equal(-1, stringArray.Compare([]interface{}{"a", "b"}, []interface{}{"a", "b", "c"}))
+	assert.Equal(-1, stringArray.Compare([]interface{}{"a", "b", "c"}, []interface{}{"a", "b", "d"}))
+	assert.Equal(0, stringArray.Compare([]interface{}{"a", "b", "c"}, []interface{}{"a", "b", "c"}))
+	assert.Equal(0, stringArray.Compare([]interface{}{}, []interface{}{}))
+	assert.Equal(1, stringArray.Compare([]interface{}{"a", "b", "c"}, []interface{}{"a", "b"}))
+	assert.Equal(1, stringArray.Compare([]interface{}{"a", "b", "d"}, []interface{}{"a", "b", "c"}))
+}
 func TestType_String(t *testing.T) {
 	var v interface{}
 	var err error

@@ -105,6 +105,46 @@ func (t nullType) Default() interface{} {
 	return nil
 }
 
+func Array(it Type) Type {
+	return arrayType{it}
+}
+
+type arrayType struct {
+	it Type
+}
+
+func (t arrayType) Name() string {
+	return fmt.Sprintf("array[%s]", t.it.Name())
+}
+
+func (t arrayType) InternalType() reflect.Kind {
+	return reflect.Array
+}
+
+func (t arrayType) Check(v interface{}) bool {
+	return checkSlice(v, t.it)
+}
+
+func (t arrayType) Convert(v interface{}) (interface{}, error) {
+	return convertToSlice(v, t.it)
+}
+
+func (t arrayType) Compare(a interface{}, b interface{}) int {
+	return compareSlice(a, b, t.it)
+}
+
+func (t arrayType) Native(v interface{}) driver.Value {
+	if v == nil {
+		return driver.Value(nil)
+	}
+
+	return driver.Value(v.([]interface{}))
+}
+
+func (t arrayType) Default() interface{} {
+	return make([]interface{}, 0)
+}
+
 var Integer = integerType{}
 
 type integerType struct{}
@@ -320,6 +360,70 @@ func (t floatType) Native(v interface{}) driver.Value {
 
 func (t floatType) Default() interface{} {
 	return float64(0)
+}
+
+func checkSlice(v interface{}, it Type) bool {
+	i, ok := v.([]interface{})
+	if !ok {
+		return false
+	}
+
+	for _, e := range i {
+		if !it.Check(e) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func convertToSlice(v interface{}, it Type) (interface{}, error) {
+	s, ok := v.([]interface{})
+	if !ok {
+		return nil, ErrInvalidType
+	}
+
+	for ix, e := range s {
+		ce, err := it.Convert(e)
+		if err != nil {
+			return nil, err
+		}
+
+		s[ix] = ce
+	}
+
+	return s, nil
+}
+
+func compareSlice(a interface{}, b interface{}, it Type) int {
+	as := a.([]interface{})
+	bs := b.([]interface{})
+
+	la := len(as)
+	lb := len(bs)
+
+	if la < lb {
+		return -1
+	}
+	if la > lb {
+		return +1
+	}
+
+	// the sizes are equals, checking the content
+	var c int
+	for i := range as {
+		c = c + it.Compare(as[i], bs[i])
+	}
+
+	if c < 0 {
+		return -1
+	}
+
+	if c > 0 {
+		return +1
+	}
+
+	return 0
 }
 
 func checkString(v interface{}) bool {
