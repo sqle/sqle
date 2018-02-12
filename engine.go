@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"gopkg.in/sqle/sqle.v0/metadata"
 	"gopkg.in/sqle/sqle.v0/sql"
 	"gopkg.in/sqle/sqle.v0/sql/analyzer"
 	"gopkg.in/sqle/sqle.v0/sql/expression"
@@ -45,7 +46,7 @@ var DefaultEngine = New()
 // It implements the standard database/sql/driver/Driver interface, so it can
 // be registered as a database/sql driver.
 type Engine struct {
-	Catalog  *sql.Catalog
+	Catalog  sql.Catalog
 	Analyzer *analyzer.Analyzer
 }
 
@@ -58,6 +59,12 @@ func New() *Engine {
 	}
 
 	a := analyzer.New(c)
+
+	m := metadata.NewDB(c)
+	if err := c.AddDatabase(m); err != nil {
+		panic(fmt.Sprintf("could not create catalog metadata database\n%s", err.Error()))
+	}
+
 	return &Engine{c, a}
 }
 
@@ -89,9 +96,23 @@ func (e *Engine) Query(query string) (sql.Schema, sql.RowIter, error) {
 	return analyzed.Schema(), iter, nil
 }
 
-func (e *Engine) AddDatabase(db sql.Database) {
-	e.Catalog.Databases = append(e.Catalog.Databases, db)
-	e.Analyzer.CurrentDatabase = db.Name()
+// AddDatabase adds a the passed database to the catalog and returns an error
+// if it could not be done
+func (e *Engine) AddDatabase(db sql.Database) error {
+	if err := e.Catalog.AddDatabase(db); err != nil {
+		return err
+	}
+
+	return e.CurrentDatabase(db.Name())
+}
+
+func (e *Engine) CurrentDatabase(name string) error {
+	if _, err := e.Catalog.Database(name); err != nil {
+		return err
+	}
+
+	e.Analyzer.CurrentDatabase = name
+	return nil
 }
 
 // Session represents a SQL session.

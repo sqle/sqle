@@ -12,7 +12,7 @@ const maxAnalysisIterations = 1000
 type Analyzer struct {
 	Rules           []Rule
 	ValidationRules []ValidationRule
-	Catalog         *sql.Catalog
+	Catalog         sql.Catalog
 	CurrentDatabase string
 }
 
@@ -26,7 +26,7 @@ type ValidationRule struct {
 	Apply func(*Analyzer, sql.Node) error
 }
 
-func New(catalog *sql.Catalog) *Analyzer {
+func New(catalog sql.Catalog) *Analyzer {
 	return &Analyzer{
 		Rules:           DefaultRules,
 		ValidationRules: DefaultValidationRules,
@@ -49,6 +49,9 @@ func (a *Analyzer) Analyze(n sql.Node) (sql.Node, error) {
 
 	// TODO improve error handling
 	if errs := a.validate(cur); len(errs) != 0 {
+		for _, err := range errs {
+			fmt.Println(fmt.Sprintf("ERROR. - %s", err))
+		}
 		return cur, errs[0]
 	}
 

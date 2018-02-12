@@ -2,6 +2,7 @@ package sql
 
 import (
 	"errors"
+	"fmt"
 )
 
 type Nameable interface {
@@ -49,6 +50,7 @@ type Aggregation interface {
 }
 
 type Node interface {
+	fmt.Stringer
 	Resolvable
 	Transformable
 	Schema() Schema
@@ -67,7 +69,19 @@ type Inserter interface {
 
 type Database interface {
 	Nameable
+	Table(string) (Table, error)
 	Tables() map[string]Table
 }
 
 var ErrInvalidType = errors.New("invalid type")
+
+func MapTableToSliceTable(tables map[string]Table) []Table {
+	t := make([]Table, len(tables))
+	i := 0
+	for _, table := range tables {
+		t[i] = table
+		i++
+	}
+
+	return t
+}

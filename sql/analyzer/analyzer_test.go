@@ -19,10 +19,11 @@ func TestAnalyzer_Analyze(t *testing.T) {
 	table := mem.NewTable("mytable", sql.Schema{{Name: "i", Type: sql.Integer}})
 	table2 := mem.NewTable("mytable2", sql.Schema{{Name: "i2", Type: sql.Integer}})
 	db := mem.NewDatabase("mydb")
-	db.AddTable("mytable", table)
-	db.AddTable("mytable2", table2)
+	assert.Nil(db.AddTable(table))
+	assert.Nil(db.AddTable(table2))
 
-	catalog := &sql.Catalog{Databases: []sql.Database{db}}
+	catalog := sql.NewCatalog()
+	catalog.AddDatabase(db)
 	a := analyzer.New(catalog)
 	a.CurrentDatabase = "mydb"
 
@@ -188,7 +189,7 @@ func TestAnalyzer_Analyze(t *testing.T) {
 func TestAnalyzer_Analyze_MaxIterations(t *testing.T) {
 	assert := require.New(t)
 
-	catalog := &sql.Catalog{}
+	catalog := sql.NewCatalog()
 	a := analyzer.New(catalog)
 	a.CurrentDatabase = "mydb"
 

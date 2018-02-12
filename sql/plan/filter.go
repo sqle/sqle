@@ -1,6 +1,10 @@
 package plan
 
-import "gopkg.in/sqle/sqle.v0/sql"
+import (
+	"fmt"
+
+	"gopkg.in/sqle/sqle.v0/sql"
+)
 
 type Filter struct {
 	UnaryNode
@@ -12,6 +16,10 @@ func NewFilter(expression sql.Expression, child sql.Node) *Filter {
 		UnaryNode:  UnaryNode{Child: child},
 		expression: expression,
 	}
+}
+
+func (p *Filter) String() string {
+	return fmt.Sprintf("[Filter] %s::%s", p.Child.String(), p.expression.Name())
 }
 
 func (p *Filter) Resolved() bool {

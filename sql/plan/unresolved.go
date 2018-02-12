@@ -14,6 +14,10 @@ func NewUnresolvedTable(name string) *UnresolvedTable {
 	return &UnresolvedTable{name}
 }
 
+func (p *UnresolvedTable) String() string {
+	return fmt.Sprintf("[UnresolvedTable] %s", p.Name)
+}
+
 func (*UnresolvedTable) Resolved() bool {
 	return false
 }

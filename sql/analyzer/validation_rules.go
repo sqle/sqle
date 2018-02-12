@@ -1,7 +1,7 @@
 package analyzer
 
 import (
-	"errors"
+	"fmt"
 
 	"gopkg.in/sqle/sqle.v0/sql"
 	"gopkg.in/sqle/sqle.v0/sql/plan"
@@ -14,7 +14,7 @@ var DefaultValidationRules = []ValidationRule{
 
 func validateIsResolved(a *Analyzer, n sql.Node) error {
 	if !n.Resolved() {
-		return errors.New("plan is not resolved")
+		return fmt.Errorf("plan is not resolved :: %s", n)
 	}
 
 	return nil
@@ -26,7 +26,7 @@ func validateOrderBy(a *Analyzer, n sql.Node) error {
 		for _, field := range n.SortFields {
 			switch field.Column.(type) {
 			case sql.AggregationExpression:
-				return errors.New("OrderBy does not support aggregation expressions")
+				return fmt.Errorf("OrderBy does not support aggregation expressions :: %s", n)
 			}
 		}
 	}

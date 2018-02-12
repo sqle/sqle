@@ -2,6 +2,7 @@ package plan
 
 import (
 	"errors"
+	"fmt"
 	"io"
 
 	"gopkg.in/sqle/sqle.v0/sql"
@@ -18,6 +19,10 @@ func NewInsertInto(dst, src sql.Node, cols []string) *InsertInto {
 		BinaryNode: BinaryNode{Left: dst, Right: src},
 		Columns:    cols,
 	}
+}
+
+func (p *InsertInto) String() string {
+	return fmt.Sprintf("[InsertInto] %s::%s", p.BinaryNode.Left.String(), p.BinaryNode.Right.String())
 }
 
 func (p *InsertInto) Schema() sql.Schema {

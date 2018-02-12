@@ -7,16 +7,34 @@ import (
 )
 
 type Table struct {
-	name   string
-	schema sql.Schema
-	data   []sql.Row
+	name            string
+	schema          sql.Schema
+	underlayingData UnderlayingTableData
+}
+
+type UnderlayingTableData interface {
+	RowIter() sql.RowIter
+	Insert(row sql.Row) error
 }
 
 func NewTable(name string, schema sql.Schema) *Table {
 	return &Table{
-		name:   name,
-		schema: schema,
+		name:            name,
+		schema:          schema,
+		underlayingData: &genericUnderlaying{},
 	}
+}
+
+func NewTableWithUnderlaying(name string, schema sql.Schema, underlayingData UnderlayingTableData) *Table {
+	return &Table{
+		name:            name,
+		schema:          schema,
+		underlayingData: underlayingData,
+	}
+}
+
+func (t *Table) String() string {
+	return "[Table] " + t.Name()
 }
 
 func (Table) Resolved() bool {
@@ -36,7 +54,7 @@ func (t *Table) Children() []sql.Node {
 }
 
 func (t *Table) RowIter() (sql.RowIter, error) {
-	return sql.RowsToRowIter(t.data...), nil
+	return t.underlayingData.RowIter(), nil
 }
 
 func (t *Table) TransformUp(f func(sql.Node) sql.Node) sql.Node {
@@ -59,6 +77,19 @@ func (t *Table) Insert(row sql.Row) error {
 		}
 	}
 
-	t.data = append(t.data, row.Copy())
+	t.underlayingData.Insert(row)
+	return nil
+}
+
+type genericUnderlaying struct {
+	rows []sql.Row
+}
+
+func (u *genericUnderlaying) RowIter() sql.RowIter {
+	return sql.RowsToRowIter(u.rows...)
+}
+
+func (u *genericUnderlaying) Insert(row sql.Row) error {
+	u.rows = append(u.rows, row.Copy())
 	return nil
 }

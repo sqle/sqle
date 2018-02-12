@@ -18,7 +18,7 @@ func TestCatalog_Database(t *testing.T) {
 	assert.Nil(db)
 
 	mydb := mem.NewDatabase("foo")
-	c.Databases = append(c.Databases, mydb)
+	c.AddDatabase(mydb)
 
 	db, err = c.Database("foo")
 	assert.NoError(err)
@@ -35,16 +35,50 @@ func TestCatalog_Table(t *testing.T) {
 	assert.Nil(table)
 
 	mydb := mem.NewDatabase("foo")
-	c.Databases = append(c.Databases, mydb)
+	c.AddDatabase(mydb)
 
 	table, err = c.Table("foo", "bar")
 	assert.EqualError(err, "table not found: bar")
 	assert.Nil(table)
 
 	mytable := mem.NewTable("bar", sql.Schema{})
-	mydb.AddTable("bar", mytable)
+	assert.Nil(mydb.AddTable(mytable))
 
 	table, err = c.Table("foo", "bar")
 	assert.NoError(err)
 	assert.Equal(mytable, table)
+}
+
+func TestAddDatabase(t *testing.T) {
+	catalog := sql.NewCatalog()
+
+	db1 := &DatabaseMock{"db1"}
+	db2 := &DatabaseMock{"db2"}
+	dbDupeName := &DatabaseMock{"db1"}
+	dbEmptyName := &DatabaseMock{""}
+
+	assert.NoError(t, catalog.AddDatabase(db1))
+	assert.NoError(t, catalog.AddDatabase(db2))
+	assert.Error(t, catalog.AddDatabase(dbDupeName))
+	assert.Error(t, catalog.AddDatabase(dbEmptyName))
+}
+
+type DatabaseMock struct {
+	name string
+}
+
+func (db *DatabaseMock) Tables() map[string]sql.Table {
+	return nil
+}
+
+func (db *DatabaseMock) Name() string {
+	return db.name
+}
+
+func (db *DatabaseMock) Table(tableName string) (sql.Table, error) {
+	return nil, nil
+}
+
+func (db *DatabaseMock) AddTable(table sql.Table) error {
+	return nil
 }

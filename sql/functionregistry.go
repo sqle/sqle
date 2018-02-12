@@ -6,6 +6,11 @@ import (
 	"reflect"
 )
 
+type Registrator interface {
+	RegisterFunction(name string, f interface{}) error
+	Function(name string) (ExpressionBuilder, error)
+}
+
 // ExpressionBuilder can build an Expression out of a given list of expressions.
 type ExpressionBuilder interface {
 	Build(...Expression) (Expression, error)

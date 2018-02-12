@@ -19,9 +19,10 @@ func Test_resolveTables(t *testing.T) {
 
 	table := mem.NewTable("mytable", sql.Schema{{Name: "i", Type: sql.Integer}})
 	db := mem.NewDatabase("mydb")
-	db.AddTable("mytable", table)
+	assert.Nil(db.AddTable(table))
 
-	catalog := &sql.Catalog{Databases: []sql.Database{db}}
+	catalog := sql.NewCatalog()
+	catalog.AddDatabase(db)
 
 	a := analyzer.New(catalog)
 	a.Rules = []analyzer.Rule{f}
@@ -47,9 +48,10 @@ func Test_resolveTables_Nested(t *testing.T) {
 
 	table := mem.NewTable("mytable", sql.Schema{{Name: "i", Type: sql.Integer}})
 	db := mem.NewDatabase("mydb")
-	db.AddTable("mytable", table)
+	assert.Nil(db.AddTable(table))
 
-	catalog := &sql.Catalog{Databases: []sql.Database{db}}
+	catalog := sql.NewCatalog()
+	catalog.AddDatabase(db)
 
 	a := analyzer.New(catalog)
 	a.Rules = []analyzer.Rule{f}

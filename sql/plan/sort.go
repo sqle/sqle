@@ -1,8 +1,10 @@
 package plan
 
 import (
+	"fmt"
 	"io"
 	"sort"
+	"strings"
 
 	"gopkg.in/sqle/sqle.v0/sql"
 )
@@ -37,6 +39,14 @@ func NewSort(sortFields []SortField, child sql.Node) *Sort {
 		UnaryNode:  UnaryNode{child},
 		SortFields: sortFields,
 	}
+}
+
+func (s *Sort) String() string {
+	var sorts []string
+	for _, sorting := range s.SortFields {
+		sorts = append(sorts, fmt.Sprintf("%s:%s", sorting.Column.Name(), string(sorting.Order)))
+	}
+	return fmt.Sprintf("[Sort] %s Sorting(%s)", s.Child.String(), strings.Join(sorts, ","))
 }
 
 func (s *Sort) Resolved() bool {

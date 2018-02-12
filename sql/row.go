@@ -1,8 +1,6 @@
 package sql
 
-import (
-	"io"
-)
+import "io"
 
 type Row []interface{}
 
@@ -14,6 +12,10 @@ func NewRow(values ...interface{}) Row {
 
 func (r Row) Copy() Row {
 	return NewRow(r...)
+}
+
+func (r Row) Columns() []interface{} {
+	return r
 }
 
 type RowIter interface {

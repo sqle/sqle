@@ -126,10 +126,37 @@ func newEngine(t *testing.T) *sqle.Engine {
 	assert.Nil(table.Insert(sql.NewRow(int64(3), "c")))
 
 	db := mem.NewDatabase("mydb")
-	db.AddTable("mytable", table)
+	assert.Nil(db.AddTable(table))
 
 	e := sqle.New()
-	e.AddDatabase(db)
+	assert.Nil(e.AddDatabase(db))
 
 	return e
+}
+
+func TestTable(t *testing.T) {
+	var r sql.Table
+	var err error
+
+	assert := require.New(t)
+
+	db1 := mem.NewDatabase("db1")
+	assert.Nil(db1.AddTable(mem.NewTable("table11", sql.Schema{})))
+	assert.Nil(db1.AddTable(mem.NewTable("table12", sql.Schema{})))
+	db2 := mem.NewDatabase("db2")
+	assert.Nil(db2.AddTable(mem.NewTable("table21", sql.Schema{})))
+	assert.Nil(db2.AddTable(mem.NewTable("table22", sql.Schema{})))
+
+	catalog := sql.NewCatalog()
+	catalog.AddDatabase(db1)
+	catalog.AddDatabase(db2)
+
+	r, err = catalog.Table("db1", "table11")
+	assert.Equal("table11", r.Name())
+
+	r, err = catalog.Table("db2", "table22")
+	assert.Equal("table22", r.Name())
+
+	r, err = catalog.Table("db1", "table22")
+	assert.Error(err)
 }
